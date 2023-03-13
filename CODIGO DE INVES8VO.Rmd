@@ -1,0 +1,143 @@
+---
+title: "DEPRE FCMUCE"
+author: "Luis Armando Figueroa"
+date: "2023-03-10"
+output: html_document
+---
+---
+title: "Meta-analysis of sglt2"
+knit: (function(inputFile, encoding) { rmarkdown::render(inputFile, encoding = encoding, output_file = paste0(dirname(inputFile),'/README.md')) })
+output: github_document
+---
+
+<i> Analysis and visualization developed by [Luis A. Figueroa](https://twitter.com/LuisFig1706) and [Oscar J. Ponce](https://twitter.com/PonceOJ)</i>
+
+The purpose of this site is to make our meta-analysis as transparent as possible. All information or documents used, from the protocol to the final publication, will be available here. If further information is needed, please do not hesitate to contact us.
+
+```{r packages, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.path = "Cont Output Figures/", dev='svg') # dev = 'png'
+
+library("metafor")
+library("tidyverse")
+library("rmarkdown")
+library("forestplot")
+library("readxl")
+```
+
+```{r cleaning, include=FALSE}
+base <- read_xlsx("BASE.xlsx", sheet = 3) #Esta es la base de datos otrogada por el grupo
+# de investigación de octavo semestre de medicina, luego de su rocelección de resultados con 
+# encuestas, anonimización, y cálculo respectivo de grado socioeconómico,  ansiedad y depresión.
+
+# Abbreviate variables 
+names(base) <- c("id", "sex", "semester","age", "civils", "typem", "psocioec", 
+                 "gsocioec", "pdep", "gdep", "pans", "gans")
+
+nodepgs <- rbind(sum(nrow(filter(base, gdep == "Minimo", gsocioec == "C+ (medio tipico)")),
+                     nrow(filter(base, gdep == "Minimo", gsocioec == "C- (medio bajo)"))),
+                 sum(nrow(filter(base, gdep == "Minimo", gsocioec == "A (alto)")),
+                     nrow(filter(base, gdep == "Minimo", gsocioec == "B (medio alto)"))))
+
+sidepgs <- rbind(sum(nrow(filter(base, gdep != "Minimo", gsocioec == "C- (medio bajo)")),
+                     nrow(filter(base, gdep != "Minimo", gsocioec == "C+ (medio tipico)"))),
+                 sum(nrow(filter(base, gdep != "Minimo", gsocioec == "A (alto)")),
+                     nrow(filter(base, gdep != "Minimo", gsocioec == "B (medio alto)"))))
+gsdep <- cbind(nodepgs, sidepgs)
+colnames(gsdep) <- c('sin depresion', 'con depresion')
+rownames(gsdep) <- c('Grado socioeconómico medio', 'Grado socioeconómico alto')
+gsdep #Grado socioeconomico bajooooooooooo y depresionnnnnnnnnnnnnnn
+
+nodepsex <- rbind(sum(nrow(filter(base, sex == "Masculino", gdep == "Minimo"))),
+                 sum(nrow(filter(base, sex == "Femenino", gdep == "Minimo"))))
+
+sidepsex <- rbind(sum(nrow(filter(base, sex == "Masculino", gdep != "Minimo"))),
+                 sum(nrow(filter(base, sex == "Femenino", gdep != "Minimo"))))
+sexdep <- cbind(nodepsex, sidepsex)
+colnames(sexdep) <- c('sin depresion', 'con depresion')
+rownames(sexdep) <- c('Masculino', 'Femenino')
+sexdep #Sexooooooo y depresionnnnnnnnnnnnnnn
+
+nodepsem <- rbind(sum(nrow(filter(base, gdep == "Minimo", semester == "Primer semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Segundo semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Tercer semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Cuarto semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Quinto semestre"))),
+                  sum(nrow(filter(base, gdep == "Minimo", semester == "Sexto semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Séptimo semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Octavo semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Noveno semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Décimo semestre"))))
+sidepsem <- rbind(sum(nrow(filter(base, gdep != "Minimo", semester == "Primer semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Segundo semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Tercer semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Cuarto semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Quinto semestre"))),
+                  sum(nrow(filter(base, gdep != "Minimo", semester == "Sexto semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Séptimo semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Octavo semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Noveno semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Décimo semestre"))))
+semdep <- cbind(nodepsem, sidepsem)
+colnames(semdep) <- c('sin depresion', 'con depresion')
+rownames(semdep) <- c('Semestres preclínicos', 'Semestres clínicos')
+semdep #Semestresssssssssssss y depresionnnnnnnnnnnnnnn
+
+nodepsem <- rbind(sum(nrow(filter(base, age == "Minimo", semester == "Primer semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Segundo semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Tercer semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Cuarto semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Quinto semestre"))),
+                  sum(nrow(filter(base, gdep == "Minimo", semester == "Sexto semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Séptimo semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Octavo semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Noveno semestre")),
+                      nrow(filter(base, gdep == "Minimo", semester == "Décimo semestre"))))
+sidepsem <- rbind(sum(nrow(filter(base, gdep != "Minimo", semester == "Primer semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Segundo semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Tercer semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Cuarto semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Quinto semestre"))),
+                  sum(nrow(filter(base, gdep != "Minimo", semester == "Sexto semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Séptimo semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Octavo semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Noveno semestre")),
+                      nrow(filter(base, gdep != "Minimo", semester == "Décimo semestre"))))
+semdep <- cbind(nodepsem, sidepsem)
+colnames(semdep) <- c('sin depresion', 'con depresion')
+rownames(semdep) <- c('Semestres preclínicos', 'Semestres clínicos')
+semdep #Semestresssssssssssss y depresionnnnnnnnnnnnnnn
+
+
+nodepec <- rbind(sum(nrow(filter(base, gdep == "Minimo", civils == "Soltero"))),
+                  sum(nrow(filter(base, gdep == "Minimo", civils != "Soltero"))))
+sidepec <- rbind(sum(nrow(filter(base, gdep != "Minimo", civils == "Soltero"))),
+                  sum(nrow(filter(base, gdep != "Minimo", civils != "Soltero"))))
+ecdep <- cbind(nodepec, sidepec)
+colnames(ecdep) <- c('sin depresion', 'con depresion')
+rownames(ecdep) <- c('Solteros', 'Otros (Union libre, Divorciado)')
+ecdep #Semestresssssssssssss y depresionnnnnnnnnnnnnnn
+
+nodeped <- rbind(sum(nrow(filter(base, gdep == "Minimo", age >= 22))),
+                  sum(nrow(filter(base, gdep == "Minimo", age < 22))))
+sideped <- rbind(sum(nrow(filter(base, gdep != "Minimo", age >= 22))),
+                  sum(nrow(filter(base, gdep != "Minimo", age < 22))))
+eddep <- cbind(nodeped, sideped)
+colnames(eddep) <- c('sin depresion', 'con depresion')
+rownames(eddep) <- c('Mayor o igual de 22', 'Menor de 22')
+eddep #Semestresssssssssssss y depresionnnnnnnnnnnnnnn
+```
+
+```{r_or, include=FALSE, echo=TRUE}
+dat_gs <- escalc(measure="OR", ai=gsdep[2,1], bi=gsdep[1,1],
+              ci=gsdep[2,2], di=gsdep[1,2], data=gsdep)
+dat_gs <- summary(dat_gs)
+
+dat_sex <- escalc(measure="OR", ai=sexdep[1,1], bi=sexdep[2,1],
+              ci=sexdep[1,2], di=sexdep[2,2], data=sexdep)
+dat_sex <- summary(dat_sex)
+
+
+meta_datgs_reml <- rma(yi, vi, method="REML", data=dat_gs)
+meta_gs <- predict(meta_datgs_reml, transf = exp, digits = 2)
+```
